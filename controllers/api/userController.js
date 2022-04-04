@@ -11,7 +11,7 @@ router.get('/', (req, res) => {
     })
 })
 
-router.get('logout', (req, res) => {
+router.get('/logout', (req, res) => {
     req.session.destroy(() => {
         res.json({message: 'Logged out'})
     })
@@ -61,3 +61,4 @@ router.post('/login', (req, res) => {
     })
 })
 
+module.exports = router
