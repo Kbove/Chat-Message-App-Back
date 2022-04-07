@@ -1,62 +1,57 @@
-const { Model, DataTypes} = require('sequelize')
-const sequelize = require('../config/connection')
+const { Schema, model } = require('mongoose')
 const bcrypt = require('bcrypt')
 
-class User extends Model {}
+const { MessageSchema } = require('./Message')
 
-User.init({
-    id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true
-    }, 
-    username: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        validate: {
-            isAlphanumeric: true
-        }
-    },
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            len:[8]
-        }
-    },
-    email:{
-        type:DataTypes.STRING,
-        unique:true,
-        validate:{
-            isEmail:true
-        }
-    },
-    friend_list: {
-        type: DataTypes.ARRAY,
-        allowNull: true,
-        defaultValue: []
-    },
-    messages: {
-        type: DataTypes.ARRAY,
-        allowNull: true,
-        defaultValue: []
-    },
-}, {
-    hooks: {
-        beforeCreate(newUser) {
-            newUser.username = newUser.username.toLowerCase()
-            newUser.password = bcrypt.hashSync(newUser.password,7)
-            return newUser
+const UserSchema = new Schema(
+    {
+        username: {
+            type: String,
+            required: false,
+            unique: true,
+            validate: {
+                isAlphanumeric: true
+            }
         },
-        beforeUpdate(updatedUser) {
-            updatedUser.username = updatedUser.username.toLowerCase()
-            updatedUser.username = bcrypt.hashSync(updatedUser.password, 7)
-            return updatedUser
-        }
-    },
-    sequelize,
+        password: {
+            type: String,
+            required: true,
+        },
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+            match: [/.+@.+\..+/, 'Must use a valid email address']
+        },
+        friend_list: {
+            type: Array,
+            allowNull: true,
+            defaultValue: []
+        },
+        messages: {
+            type: Array,
+            allowNull: true,
+            defaultValue: []
+        },
+    }, {
+        toJSON: {
+            virtuals: true,
+        },
+    }
+)
+
+UserSchema.pre('save', async function (next) {
+    if (this.isNew || this.isModified('password')) {
+        const saltRounds = 10
+        this.password = await bcrypt.hash(this.password, saltRounds)
+    }
+    next()
 })
+
+UserSchema.methods.isCorrectPassword = async function (password) {
+    return bcrypt.compare(password, this.password)
+}
+
+const User = model('User', UserSchema)
 
 module.exports = User

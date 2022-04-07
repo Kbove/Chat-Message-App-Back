@@ -1,41 +1,27 @@
-const { Model, DataTypes} = require('sequelize')
-const sequelize = require('../config/connection')
-const bcrypt = require('bcrypt')
+const { Schema, model } = require('mongoose')
+const { DATE, NUMBER, TEXT } = require('sequelize/types')
 
-class Message extends Model {}
-
-Message.init({
-    id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        allowNull: false, 
-        autoIncrement: true
-    },
+const MessageSchema = new Schema(
+    {
     sender_id: {
-        type: DataTypes.INTEGER,
-        references: {
-            model: 'Users',
-            key: 'id'
-        },
+        type: Number,
+        required: true,
     },
     receiver_id: {
-        type: DataTypes.INTEGER,
-        references: {
-            model: 'Users',
-            key: 'id'
-        }
+        type: Number,
+        required: true,
     },
     date_sent: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue: DataTypes.NOW
+        type: Date,
+        required: true,
+        defaultValue: () => Date.now() + 7*24*60*60*1000,
     },
     content: {
-        type: DataTypes.STRING,
+        type: String,
         allowNull: false,
     },
-}, {
-    sequelize,
 })
+
+const Message = model('Message', MessageSchema)
 
 module.exports = Message

@@ -1,5 +1,4 @@
 const express = require('express')
-const sequelize = require('./config/connection.js')
 const app = express()
 const http = require('http')
 const server = http.createServer(app)
