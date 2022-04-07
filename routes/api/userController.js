@@ -1,55 +1,49 @@
-const express = require('express')
-const router = express.Router()
+const router = require('express').Router()
 const { User, Message } = require('../../models')
-const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 require('dotenv').config()
-const auth = require('../../utils/auth')
-const { authMiddleware, signToken } = require('../../utils/auth')
 
+const { authMiddleWare, signToken } = require('../../utils')
+const auth = require('../../utils/auth')
 
 router.get('/', (req, res) => {
-    User.findAll().then(userData => {
-        res.json({userData})
+    User.find({}).then(userData => {
+        res.json(userData)
     }).catch(err => {
-        res.status(500).json(err)
+        res.json(err)
     })
 })
 
-// router.get('/logout', (req, res) => {
-//     req.session.destroy(() => {
-//         res.json({message: 'Logged out'})
-//     })
-// })
-
-router.post('/signup', async (req, res) => {
+router.post('/signup', async ({body}, res) => {
     try {
-        const userData = await User.create(req.body)
-        res.status(200).json(userData)
+        User.create(body)
+        .then(data => {
+            if (!data) {
+                return res.status(400).json({ message: 'Invalid inputs'})
+            }
+            const token = signToken(data)
+            res.json({token, data})
+        })
     } catch (err) {
-        res.status(400).json(err)
+        return res.status(400).json(err)
     }
 })
 
-router.post('/login', (req, res) => {
-    User.findOne({
-        where: {
-            email: req.body.email
+router.post('/login', async ({body}, res) => {
+    try {
+        const user = await User.findOne({ $or: [{username: body.username}, {email: body.email}]})
+        if (!user) {
+            return res.status(400).json({message: 'Wrong username or password'})
         }
-    }).then(foundUser => {
-        if (!foundUser) {
-            res.status(401).json({message: 'Incorrect email or password'})
-        } else {
-            if (bcrypt.compareSync(req.body.password, foundUser.password)) {
-                res.json({foundUser})
-            } else {
-                res.status(401).json({message: 'Incorrect email or password'})
-            }
+        const correctPw = await user.isCorrectPassword(body.password)
+        if (!correctPw) {
+            return res.status(400).json({ message: 'Wrong username or password'})
         }
-        const token = signToken(foundUser);
-        res.json({ token, foundUser });
-    }).catch(err => {
-        res.status(500).json(err)
-    })
+        const token = signToken(user)
+        res.json({token, user})
+    } catch (err) {
+        return res.status(400).json(err)
+    }
 })
 
 module.exports = router
