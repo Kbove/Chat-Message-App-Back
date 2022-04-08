@@ -37,3 +37,4 @@ module.exports = {
     return jwt.sign({ data: payload }, process.env.TOKEN_SECRET, { expiresIn: expiration });
   }
 };
+

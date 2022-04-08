@@ -3,7 +3,7 @@ const { User, Message } = require('../../models')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
 
-const { authMiddleWare, signToken } = require('../../utils')
+const { authMiddleWare, signToken } = require('../../utils/auth')
 const auth = require('../../utils/auth')
 
 router.get('/', (req, res) => {

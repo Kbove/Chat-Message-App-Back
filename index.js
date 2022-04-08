@@ -1,21 +1,31 @@
-const express = require('express')
+//Require the express moule
+const express = require('express');
+const db = require('./config/connection');
+const routes = require('./routes')
+//create a new express application
 const app = express()
-const http = require('http')
-const server = http.createServer(app)
-const { Server } = require('socket.io')
-const io = new Server(server)
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
-// const socketServer = require('./controllers/socketServer')
-const { Http2ServerRequest } = require('http2')
-// socketServer(io)
+//require the http module
+const http = require('http').Server(app)
 
-const PORT = process.env.PORT || 3000
+// require the socket.io module
+const io = require('socket.io');
 
-app.use(express.urlencoded({extended: true}))
-app.use(express.json())
+const port = 3001;
 
-sequelize.sync({force: false}).then(function() {
-    server.listen(PORT, function() {
-        console.log('App listen on PORT ' + PORT)
-    })
+const socket = io(http);
+//create an event listener
+app.use(routes)
+//To listen to messages
+socket.on('connection', (socket) => {
+    console.log('user connected');
+});
+
+//wire up the server to listen to our port 500
+db.once('open', () => {
+    http.listen(port, () => {
+        console.log('connected to port: ' + port)
+    });
 })

@@ -1,5 +1,4 @@
 const { Schema, model } = require('mongoose')
-const { DATE, NUMBER, TEXT } = require('sequelize/types')
 
 const MessageSchema = new Schema(
     {
