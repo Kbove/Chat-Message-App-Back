@@ -14,36 +14,41 @@ router.get('/', (req, res) => {
     })
 })
 
-router.post('/signup', async ({body}, res) => {
+router.post('/signup', async ({ body }, res) => {
     try {
-        User.create(body)
+      User.create(body)
         .then(data => {
-            if (!data) {
-                return res.status(400).json({ message: 'Invalid inputs'})
-            }
-            const token = signToken(data)
-            res.json({token, data})
+          if (!data) {
+            return res.status(400).json({ message: 'Something is wrong!' });
+          }
+          const token = signToken(data);
+          console.log('token', token)
+          res.json({ token, data });
         })
     } catch (err) {
-        return res.status(400).json(err)
+      console.log(err)
+      return res.status(400).json(err);
     }
-})
+  })
 
-router.post('/login', async ({body}, res) => {
+
+  router.post('/login', async ({ body }, res) => {
     try {
-        const user = await User.findOne({ $or: [{username: body.username}, {email: body.email}]})
-        if (!user) {
-            return res.status(400).json({message: 'Wrong username or password'})
-        }
-        const correctPw = await user.isCorrectPassword(body.password)
-        if (!correctPw) {
-            return res.status(400).json({ message: 'Wrong username or password'})
-        }
-        const token = signToken(user)
-        res.json({token, user})
+      const user = await User.findOne({ $or: [{ username: body.username }, { email: body.email }] })
+      if (!user) {
+        return res.status(400).json({ message: "Wrong username or password" });
+      }
+      const correctPw = await user.isCorrectPassword(body.password);
+      console.log(correctPw)
+      if (!correctPw) {
+        return res.status(400).json({ message: 'Wrong username or password' });
+      }
+      const token = signToken(user);
+      res.json({ token, user });
     } catch (err) {
-        return res.status(400).json(err)
+      console.log(err)
+      return res.status(400).json(err);
     }
-})
+  })
 
 module.exports = router
